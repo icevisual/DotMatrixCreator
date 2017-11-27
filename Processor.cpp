@@ -67,30 +67,34 @@ BOOL  ProcessCmdLineArgvs2(_In_ LPWSTR lpCmdLine, INT offset, INT * Point)
 	return FALSE;
 }
 
-VOID ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText)
+BOOL ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText)
 {
 	size_t Length = _tcslen(lpCmdLine);
 	INT OutPoint[4] = {0};
 	TCHAR Key[MAX_ARGV_KEY_LENGTH] = { 0 };
 	TCHAR Value[MAX_ARGV_VALUE_LENGTH] = { 0 };
+	INT MatchCount = 0;
 	while (ProcessCmdLineArgvs2(lpCmdLine, OutPoint[2] + OutPoint[3], OutPoint))
 	{
 		_tcsncpy_s(Key, MAX_ARGV_KEY_LENGTH, &(lpCmdLine[OutPoint[0]]), OutPoint[1]);
 		_tcsncpy_s(Value, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
 		if (_tcscmp(Key, L"name") == 0)
 		{
+			MatchCount++;
 			_tcsncpy_s(StorageFile, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
 		}
 		if (_tcscmp(Key, L"text") == 0)
 		{
+			MatchCount++;
 			_tcsncpy_s(TargetText, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
 		}
 		DP2("Key = %s Value = %s\n", Key, Value);
 
 	}
 
-
-	DP1("Length = %d\n", Length);
-
-
+	if (MatchCount < 2)
+	{
+		return FALSE;
+	}
+	return TRUE;
 }

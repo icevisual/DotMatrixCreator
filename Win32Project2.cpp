@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "Win32Project2.h"
 
-
 #define MAX_LOADSTRING 100
 // 全局变量: 
 HINSTANCE hInst;                                // 当前实例
@@ -15,7 +14,7 @@ void				SetMat(LPMAT2 lpMat);
 // 此代码模块中包含的函数的前向声明: 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 // 获取字体边框
-VOID				GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo);
+VOID				GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile);
 // 浮点数据转换为固定浮点数。
 FIXED				FixedFromDouble(double d);   
 
@@ -27,7 +26,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	TCHAR StorageFile[MAX_ARGV_VALUE_LENGTH] = { 0 };
 	TCHAR TargetFontText[MAX_ARGV_VALUE_LENGTH] = { 0 };
 
-	ProcessCmdLineArgvs(lpCmdLine, StorageFile, TargetFontText);
+	if (FALSE == ProcessCmdLineArgvs(lpCmdLine, StorageFile, TargetFontText))
+	{
+		return -1;
+	}
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -49,7 +51,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 	//TCHAR * TextDemo = L"日行千里的骏马拼命地跟在后面追赶";
 	// L"丿了刂丨阝阝卩丶厶匚乊亻丷"
-	GetFontGlyph(hWnd, L"电");
+	GetFontGlyph(hWnd, TargetFontText, StorageFile);
 
 	//PrintFont("丶");
 	return TRUE;
@@ -57,7 +59,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 //
 //获取字模信息。
-void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo)
+void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 {
 	HDC hDC = ::GetDC(m_hWnd);
 	//创建字体。
@@ -74,7 +76,8 @@ void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo)
 	GLYPHMETRICS gm;
 
 	FILE * DistFfp = NULL;
-	errno_t error_t =  fopen_s(&DistFfp,"font.bin","wb");
+	errno_t error_t = _wfopen_s(&DistFfp, StorageFile,L"wb");
+
 	if (error_t != 0)
 	{
 
@@ -122,10 +125,9 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 	INT YUp = floor((TargetHeight - gm.gmBlackBoxY) / 2.0);
 	INT YDown = TargetHeight - YUp - gm.gmBlackBoxY;
 
-	wsprintf(MSG, L"gmX = %d,gmY = %d,XL = %d,XR = %d,YU = %d,YD = %d\n",
+	DP6("gmX = %d,gmY = %d,XL = %d,XR = %d,YU = %d,YD = %d\n",
 		gm.gmBlackBoxX, gm.gmBlackBoxY,
 		XLeft, XRight, YUp, YDown);
-	OutputDebugString(MSG);
 
 	DWORD dwNeedSize = TargetHeight * (DWORD)(ceil(TargetWidth / 8.0));
 	//BYTE FontBlock[TargetHeight ];
@@ -141,9 +143,9 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 
 		for (INT j = 0; j < TargetWidth; j++)
 		{
-			OutputDebugString(_T("○"));
+			DP0("○");
 		}
-		OutputDebugString(_T("\r\n"));
+		DP0("\r\n");
 	}
 
 	//显示每行图形的数据。
@@ -156,7 +158,7 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 		for (INT j = 0; j < XLeft; j++)
 		{
 			ByteCount++;
-			OutputDebugString(_T("○"));
+			DP0("○");
 		}
 
 		for (INT j = 0; j < nByteCount; j++)
@@ -171,12 +173,12 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 					break;
 				if (btCode & (0x80 >> k))
 				{
-					OutputDebugString(_T("●"));
+					DP0("●");
 					FontByteBuf[Cursor] |= 1;
 				}
 				else
 				{
-					OutputDebugString(_T("○"));
+					DP0("○");
 				}
 				ByteCount++;
 				if (ByteCount == 8)
@@ -201,10 +203,10 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 		
 		for (INT j = 0; j < XRight; j++)
 		{
-			OutputDebugString(_T("○"));
+			DP0("○");
 		}
 		//
-		OutputDebugString(_T("\r\n"));
+		DP0("\r\n");
 	}
 
 	for (INT i = 0; i < YDown; i++)
@@ -215,9 +217,9 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 		}
 		for (INT j = 0; j < TargetWidth; j++)
 		{
-			OutputDebugString(_T("○"));
+			DP0("○");
 		}
-		OutputDebugString(_T("\r\n"));
+		DP0("\r\n");
 	}
 
 	for (INT i = 0; i < TargetHeight; i++)
@@ -225,17 +227,15 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 		INT LineCount = (INT)(ceil(TargetWidth / 8.0));
 		for (INT j = 0; j < LineCount; j++)
 		{
-			wsprintf(MSG, L"0x%02X ", FontByteBuf[i * LineCount + j]);
-			OutputDebugString(MSG);
+			DP1("0x%02X ", FontByteBuf[i * LineCount + j]);
 		}
-		OutputDebugString(_T("\r\n"));
+		DP0("\r\n");
 	}
 
-	OutputFontGlyphXY(TargetWidth,TargetHeight, FontByteBuf);
+	//OutputFontGlyphXY(TargetWidth,TargetHeight, FontByteBuf);
 	//OutputFontGlyphXY(gm.gmBlackBoxX, gm.gmBlackBoxY, lpBuf);
 	size_t InSize = fwrite(FontByteBuf, sizeof(FontByteBuf[0]), dwNeedSize,distFp);
-	wsprintf(MSG, L"InSize = %d\n", InSize);
-	OutputDebugString(MSG);
+	DP1("fwrite Size = %d\n", InSize);
 	HeapFree(GetProcessHeap(), 0, FontByteBuf);
 }
 
