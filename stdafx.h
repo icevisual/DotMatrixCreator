@@ -21,7 +21,7 @@
 
 //#define _DEBUG
 
-#ifdef _DEBUG1
+#ifdef _DEBUG
 
 #define DP0(fmt) {TCHAR sOut[256];_stprintf_s(sOut,_T(fmt));OutputDebugString(sOut);}    
 #define DP1(fmt,var) {TCHAR sOut[256];_stprintf_s(sOut,_T(fmt),var);OutputDebugString(sOut);}    
@@ -32,7 +32,7 @@
 #define DP6(fmt,var1,var2,var3,var4,var5,var6) {TCHAR sOut[256];_stprintf_s(sOut,_T(fmt),var1,var2,var3,var4,var5,var6);OutputDebugString(sOut);}    
 
 #endif    
-#ifndef _DEBUG1   
+#ifndef _DEBUG
 
 #define DP0(fmt) ;    
 #define DP1(fmt, var) ;    

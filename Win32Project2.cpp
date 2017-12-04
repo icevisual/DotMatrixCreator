@@ -111,6 +111,17 @@ void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 	ReleaseDC(m_hWnd, hDC);
 }
 
+//
+//BYTE ByteReverse(BYTE cByte)
+//{
+//	BYTE R = 0;
+//	for (INT i = 0; i < 8; i++)
+//	{
+//
+//	}
+//}
+
+
 VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT Length, FILE * distFp)
 {
 	//计算图形每行占用的字节数。
@@ -158,6 +169,11 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 		for (INT j = 0; j < XLeft; j++)
 		{
 			ByteCount++;
+			if (ByteCount == 8)
+			{
+				Cursor++;
+				ByteCount = 0;
+			}
 			DP0("○");
 		}
 
@@ -174,7 +190,8 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 				if (btCode & (0x80 >> k))
 				{
 					DP0("●");
-					FontByteBuf[Cursor] |= 1;
+				//	FontByteBuf[Cursor] |= 1;
+					FontByteBuf[Cursor] |= (1 << ByteCount);
 				}
 				else
 				{
@@ -188,14 +205,15 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT 
 				}
 				else
 				{
-					FontByteBuf[Cursor] = FontByteBuf[Cursor] << 1;
+				//	FontByteBuf[Cursor] = FontByteBuf[Cursor] << 1;
 				}
 				PointCount++;
 			}
 
 		}
 		// 循环中已左移一次
-		FontByteBuf[Cursor++] <<= (8 - ByteCount - 1);
+	//	FontByteBuf[Cursor++] <<= (8 - ByteCount - 1);
+		Cursor++;
 		for (INT j = 0; j < ceil((XRight - (8 - ByteCount)) / 8.0); j++)
 		{
 			Cursor++;
