@@ -67,7 +67,11 @@ BOOL  ProcessCmdLineArgvs2(_In_ LPWSTR lpCmdLine, INT offset, INT * Point)
 	return FALSE;
 }
 
-BOOL ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText)
+BOOL ProcessCmdLineArgvs(
+	LPWSTR lpCmdLine, 
+	LPWSTR StorageFile, 
+	LPWSTR TargetText,
+	INT * UsingMessageBox)
 {
 	size_t Length = _tcslen(lpCmdLine);
 	INT OutPoint[4] = {0};
@@ -88,6 +92,11 @@ BOOL ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText
 			MatchCount++;
 			_tcsncpy_s(TargetText, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
 		}
+		if (_tcscmp(Key, L"reminder") == 0)
+		{
+			*UsingMessageBox = 1;
+		//	_tcsncpy_s(TargetText, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
+		}
 		DP2("Key = %s Value = %s\n", Key, Value);
 
 	}
@@ -97,4 +106,101 @@ BOOL ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText
 		return FALSE;
 	}
 	return TRUE;
+}
+
+
+BOOL ConvertChar2Int(TCHAR * Buf,INT OffSet,INT Length,INT * Output)
+{
+	INT Sum = 0;
+	for (int i = OffSet; i < OffSet + Length; i++)
+	{
+		if (Buf[i] >= '0' && Buf[i] <= '9')
+		{
+			Sum = Sum * 10 + (Buf[i] - '0');
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	*Output = Sum;
+	return TRUE;
+}
+
+BOOL ProcessCmdLineArgvsH(
+	LPWSTR lpCmdLine,
+	LPWSTR StorageFile,
+	LPWSTR TargetText,
+	INT * UsingMessageBox,
+	INT * HoldTime)
+{
+	size_t Length = _tcslen(lpCmdLine);
+	INT OutPoint[4] = { 0 };
+	TCHAR Key[MAX_ARGV_KEY_LENGTH] = { 0 };
+	TCHAR Value[MAX_ARGV_VALUE_LENGTH] = { 0 };
+	INT MatchCount = 0;
+	while (ProcessCmdLineArgvs2(lpCmdLine, OutPoint[2] + OutPoint[3], OutPoint))
+	{
+		_tcsncpy_s(Key, MAX_ARGV_KEY_LENGTH, &(lpCmdLine[OutPoint[0]]), OutPoint[1]);
+		_tcsncpy_s(Value, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
+		if (_tcscmp(Key, L"name") == 0)
+		{
+			MatchCount++;
+			_tcsncpy_s(StorageFile, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
+		}
+		if (_tcscmp(Key, L"text") == 0)
+		{
+			MatchCount++;
+			_tcsncpy_s(TargetText, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
+		}
+		if (_tcscmp(Key, L"reminder") == 0)
+		{
+			*UsingMessageBox = 1;
+	//		_tcsncpy_s(TargetText, MAX_ARGV_VALUE_LENGTH, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
+		}
+		if (_tcscmp(Key, L"hold") == 0)
+		{
+			TCHAR HoldTimeBuf[50] = {0};
+			_tcsncpy_s(HoldTimeBuf, 50, &(lpCmdLine[OutPoint[2]]), OutPoint[3]);
+			if (ConvertChar2Int(HoldTimeBuf, 0, OutPoint[3], HoldTime) == FALSE)
+			{
+				*HoldTime = 0;
+			}
+		}
+		DP2("Key = %s Value = %s\n", Key, Value);
+
+	}
+
+	if (MatchCount < 2)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+
+
+
+void debug_log(char * msg) {
+	// if file "DEBUG.CFG" do not exists ,do not write file log 
+
+	char logFileName[20] = { 0 };
+	strcpy_s(logFileName, "fplog.txt");
+	FILE * fplog;
+	int msgLength = strlen(msg);
+	char * msgContent = (char*)malloc(msgLength * sizeof(char) + 40);
+
+	char timeStr[64] = { 0 };
+
+	sprintf_s(msgContent, msgLength * sizeof(char) + 40, "%s\n", msg);
+	errno_t error_t = fopen_s(&fplog, logFileName, "a");
+	if (error_t != 0)
+	{
+
+		return;
+	}
+	fputs(msgContent, fplog);
+	fclose(fplog);
+	free(msgContent);
 }

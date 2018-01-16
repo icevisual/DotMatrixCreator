@@ -9,6 +9,10 @@
 HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
+
+INT g_UsingMessageBox = 0;
+INT g_HoldFileTime = 0;
+
 //设置字体图形变换矩阵。
 void				SetMat(LPMAT2 lpMat);
 // 此代码模块中包含的函数的前向声明: 
@@ -18,6 +22,11 @@ VOID				GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile);
 // 浮点数据转换为固定浮点数。
 FIXED				FixedFromDouble(double d);   
 
+
+#define MAX_LOG_MSG_LENGTH  100
+
+CHAR g_MSG[MAX_LOG_MSG_LENGTH] = { 0 };
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -25,11 +34,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	TCHAR StorageFile[MAX_ARGV_VALUE_LENGTH] = { 0 };
 	TCHAR TargetFontText[MAX_ARGV_VALUE_LENGTH] = { 0 };
-
-	if (FALSE == ProcessCmdLineArgvs(lpCmdLine, StorageFile, TargetFontText))
+	
+	if (FALSE == ProcessCmdLineArgvsH(lpCmdLine, StorageFile, TargetFontText,&g_UsingMessageBox,&g_HoldFileTime))
 	{
 		return -1;
 	}
+
+	sprintf_s(g_MSG, MAX_LOG_MSG_LENGTH,"g_UsingMessageBox[%d],g_HoldFileTime[%d]", g_UsingMessageBox, g_HoldFileTime);
+	debug_log(g_MSG);
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -52,6 +64,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//TCHAR * TextDemo = L"日行千里的骏马拼命地跟在后面追赶";
 	// L"丿了刂丨阝阝卩丶厶匚乊亻丷"
 	GetFontGlyph(hWnd, TargetFontText, StorageFile);
+
+	if(g_UsingMessageBox)
+		MessageBox(0,L"字库生成成功！",L"提示", MB_ICONINFORMATION);
 
 	//PrintFont("丶");
 	return TRUE;
@@ -102,7 +117,13 @@ void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 			}
 		}
 	}
-	
+	sprintf_s(g_MSG, MAX_LOG_MSG_LENGTH, "Sleep(g_HoldFileTime)[%d]", g_HoldFileTime);
+	debug_log(g_MSG);
+	if (g_HoldFileTime > 0)
+	{
+		Sleep(g_HoldFileTime);
+	}
+
 	fclose(DistFfp);
 	//
 	SelectObject(hDC, hOldFont);

@@ -18,7 +18,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <math.h>
-
+#include "Utils.h"
 //#define _DEBUG
 
 #ifdef _DEBUG
@@ -50,7 +50,18 @@
 // 存储的命令行参数值的最大长度
 #define MAX_ARGV_VALUE_LENGTH 255  
 // 从命令行获取参数
-BOOL				ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText);
+//BOOL				ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText);
+
+BOOL ProcessCmdLineArgvsH(
+	LPWSTR lpCmdLine,
+	LPWSTR StorageFile,
+	LPWSTR TargetText,
+	INT * UsingMessageBox,
+	INT * HoldTime);
+
+void debug_log(char * msg);
+
+BOOL				ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText, INT * UsingMessageBox);
 // 从点阵文件读取字体点阵输出
 INT					PrintFont(char * incode);
 // 输出边框字体，传入长宽
