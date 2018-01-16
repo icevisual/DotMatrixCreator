@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>-reminder=1 --hold=5000  --name=DMC.bin --text="哼十这的想手非曼冉就有伦起掌云说也意舞个然端"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-reminder=1 --hold=5000  --title=电影X战警2049 --name=DMC.bin --text="十这的想手非曼冉就有伦起掌云说也意舞个然端"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

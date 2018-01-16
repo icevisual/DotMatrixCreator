@@ -56,6 +56,7 @@ BOOL ProcessCmdLineArgvsH(
 	LPWSTR lpCmdLine,
 	LPWSTR StorageFile,
 	LPWSTR TargetText,
+	LPWSTR TitleText,
 	INT * UsingMessageBox,
 	INT * HoldTime);
 
@@ -64,6 +65,7 @@ void debug_log(char * msg);
 BOOL				ProcessCmdLineArgvs(LPWSTR lpCmdLine, LPWSTR StorageFile, LPWSTR TargetText, INT * UsingMessageBox);
 // 从点阵文件读取字体点阵输出
 INT					PrintFont(char * incode);
+int PrintFont(INT  incode);
 // 输出边框字体，传入长宽
 VOID				OutputFontGlyphXY(INT width, INT height, LPBYTE lpBuf);
 // 输出边框字体
@@ -73,4 +75,4 @@ VOID				OutputFontGlyphFixSize(GLYPHMETRICS gm, LPBYTE lpBuf, INT Length);
 // 输出边框字体 45 * 45 转 Byte Array
 VOID				OutputFontGlyphFixSizeToByteArray(GLYPHMETRICS gm, LPBYTE lpBuf, INT Length);
 // 输出边框字体 45 * 45 转 Byte Array，写入文件
-VOID				OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT Length,FILE * distFp);
+VOID				OutputFontGlyphFixSizeToByteArrayToFile(GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height, FILE * distFp);

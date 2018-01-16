@@ -291,6 +291,53 @@ VOID OutputFontGlyphFixSizeToByteArray(GLYPHMETRICS gm, LPBYTE lpBuf, INT Length
 #define HoldLength  128
 #define FontWidth 32
 
+
+int PrintFont(INT  incode)
+{
+	int    i, j, k;
+	//unsigned    char    incode[3] = "丿";    //    要读出的汉字   
+	unsigned    char    qh, wh;
+	unsigned    long    offset;
+	//    占两个字节,    取其区位号   
+
+	//offset = (94 * (qh - 1) + (wh - 1)) * HoldLength; /*得到偏移位置*/
+	offset = (incode) * HoldLength; /*得到偏移位置*/
+	FILE    * HZK = NULL;
+	char    mat[HoldLength];
+	errno_t error = fopen_s(&HZK, "HZK32", "rb");
+
+	if (error != 0)
+	{
+		return 0;
+	}
+	fseek(HZK, offset, SEEK_SET);
+	fread(mat, HoldLength, 1, HZK);
+	TCHAR MSG[100] = { 0 };
+
+	int EachBitCount = FontWidth / 8;
+	//显示
+	for (j = 0;j<FontWidth;j++)
+	{
+		for (i = 0;i<EachBitCount;i++)
+		{
+			for (k = 0;k < 8;k++)
+			{
+				if (mat[EachBitCount * j + i] & (0x80 >> k))
+				{
+					OutputDebugString(L"●");
+				}
+				else
+				{
+					OutputDebugString(L"○");
+				}
+			}
+		}
+		OutputDebugString(L"\n");
+	}
+	fclose(HZK);
+	return 0;
+}
+
 int PrintFont(char * incode)
 {
 	int    i, j, k;
@@ -301,7 +348,6 @@ int PrintFont(char * incode)
 	qh = incode[0] - 0xa0; // 获得区码
 	wh = incode[1] - 0xa0; // 获得位码
 	offset = (94 * (qh - 1) + (wh - 1)) * HoldLength; /*得到偏移位置*/
-
 	FILE    * HZK = NULL;
 	char    mat[HoldLength];
 	errno_t error = fopen_s(&HZK, "HZK32", "rb");
