@@ -13,16 +13,18 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 INT g_UsingMessageBox = 0;
 INT g_HoldFileTime = 0;
 
+TCHAR g_CurrentChar = 0;
+
 //设置字体图形变换矩阵。
 void				SetMat(LPMAT2 lpMat);
 // 此代码模块中包含的函数的前向声明: 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 // 获取字体边框
-VOID				GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile);
+VOID				GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * distFp);
 // 浮点数据转换为固定浮点数。
 FIXED				FixedFromDouble(double d);   
 // 获取标题字体边框（含中文，大小写英文，数字，生成半个字存储）
-VOID				GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile);
+void				GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * distFp);
 
 VOID OutputFontGlyphFixSizeToByteArrayToFileSeparate2(GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height, FILE * distFp);
 
@@ -76,13 +78,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	{
 		return FALSE;
 	}
-	TCHAR * TextDemo = L"QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890-='\"?<>,.()";
+
+
+	FILE * DistFfp = NULL;
+	errno_t error_t = _wfopen_s(&DistFfp, StorageFile, L"wb");
+
+	if (error_t != 0)
+	{
+
+		return FALSE;
+	}
+	// TODO : Remove
+	TCHAR * TextDemo = L"1234567890qypgweruoaszxcvnmitdfhklbj";
+	// 123 38    上 5 下 6
+
 	if (TitleLength > 0)
-		GetTitleFontGlyph(hWnd, TitleText, StorageFile);
+		GetTitleFontGlyph(hWnd, TextDemo, DistFfp);
 
 	//TCHAR * TextDemo = L"日行千里的骏马拼命地跟在后面追赶";
 	// L"丿了刂丨阝阝卩丶厶匚乊亻丷"
-	GetFontGlyph(hWnd, TargetFontText, StorageFile);
+	GetFontGlyph(hWnd, TargetFontText, DistFfp);
+
+	fclose(DistFfp);
 
 	if(g_UsingMessageBox)
 		MessageBox(0,L"字库生成成功！",L"提示", MB_ICONINFORMATION);
@@ -93,7 +110,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 //
 //获取字模信息。
-void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
+void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * DistFfp)
 {
 	HDC hDC = ::GetDC(m_hWnd);
 	//创建字体。
@@ -109,14 +126,6 @@ void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 
 	GLYPHMETRICS gm;
 
-	FILE * DistFfp = NULL;
-	errno_t error_t = _wfopen_s(&DistFfp, StorageFile,L"wb");
-
-	if (error_t != 0)
-	{
-
-		return;
-	}
 //	TCHAR * TextDemo = L"在此处添加使用的任何绘图代码";
 	for (int i = 0; i < _tcslen(TextDemo); i++)
 	{
@@ -143,7 +152,6 @@ void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 		Sleep(g_HoldFileTime);
 	}
 
-	fclose(DistFfp);
 	//
 	SelectObject(hDC, hOldFont);
 	DeleteObject(hFont);
@@ -151,10 +159,36 @@ void GetFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 	ReleaseDC(m_hWnd, hDC);
 }
 
+// 0 = ASCII 1 = qypgweruoaszxcvnm 2 = itdfhklb 3 = j
+INT GetFontTextType(TCHAR ch)
+{
+	TCHAR * TextDemo = L"qypgweruoaszxcvnmitdfhklbj";
+	// itdfhklb
+	INT Type = -1;// 1 = qypgweruoaszxcvnm 2 = itdfhklb 3 = j
+	if (Type < 128)
+		Type = 0;
+	if (ch >= 'a' && ch <= 'z')
+		Type = 1;
+	switch (ch)
+	{
+	case 'i':
+	case 't':
+	case 'd':
+	case 'f':
+	case 'h':
+	case 'k':
+	case 'l':
+	case 'b': Type = 2;break;
+	case 'j': Type = 3;break;
+	default:
+		break;
+	}
+	return Type;
+}
 
 //
 //获取字模信息。
-void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
+void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * DistFfp)
 {
 	HDC hDC = ::GetDC(m_hWnd);
 	//创建字体。
@@ -170,14 +204,6 @@ void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 
 	GLYPHMETRICS gm;
 
-	FILE * DistFfp = NULL;
-	errno_t error_t = _wfopen_s(&DistFfp, StorageFile, L"wb");
-
-	if (error_t != 0)
-	{
-
-		return;
-	}
 	//	TCHAR * TextDemo = L"在此处添加使用的任何绘图代码";
 	for (int i = 0; i < _tcslen(TextDemo); i++)
 	{
@@ -191,13 +217,35 @@ void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 			{
 				//获取字符图形的数据到缓冲区。
 				GetGlyphOutline(hDC, TextDemo[i], GGO_BITMAP, &gm, dwNeedSize, lpBuf, &mat2);
-				
+				DP1("C=%c ", TextDemo[i]);
+				g_CurrentChar = TextDemo[i];
+
+				// 	TCHAR * TextDemo = L"1234567890qypgweruoaszxcvnmitdfhklbj";
+				INT FType = GetFontTextType(TextDemo[i]);
+
+				switch (FType)
+				{
+				case -1:
+					OutputFontGlyphFixSizeToByteArrayToFileSeparate2(gm, lpBuf, 38, 38, DistFfp);
+					break;
+				case 0:
+					OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
+					break;
+				case 1:
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
+				default:
+					break;
+				}
+
 				if ((TextDemo[i] > 'a' && TextDemo[i] < 'z')
 					|| (TextDemo[i] > 'A' && TextDemo[i] < 'Z')
 					|| (TextDemo[i] > '0' && TextDemo[i] < '9')
 					)
 				{
-					DP1("C=%c ", TextDemo[i]);
 					OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
 				}
 				else if (TextDemo[i] < 128)
@@ -213,24 +261,12 @@ void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, TCHAR * StorageFile)
 			}
 		}
 	}
-
-	fclose(DistFfp);
 	//
 	SelectObject(hDC, hOldFont);
 	DeleteObject(hFont);
 	//
 	ReleaseDC(m_hWnd, hDC);
 }
-
-//
-//BYTE ByteReverse(BYTE cByte)
-//{
-//	BYTE R = 0;
-//	for (INT i = 0; i < 8; i++)
-//	{
-//
-//	}
-//}
 
 
 VOID OutputFontGlyphFixSizeToByteArrayToFile(
@@ -262,12 +298,6 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(
 		{
 			FontByteBuf[Cursor++] = 0x00;
 		}
-
-		for (INT j = 0; j < TargetWidth; j++)
-		{
-			DP0("○");
-		}
-		DP0("\r\n");
 	}
 
 	//显示每行图形的数据。
@@ -285,7 +315,6 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(
 				Cursor++;
 				ByteCount = 0;
 			}
-			DP0("○");
 		}
 
 		for (INT j = 0; j < nByteCount; j++)
@@ -300,13 +329,8 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(
 					break;
 				if (btCode & (0x80 >> k))
 				{
-					DP0("●");
 					//	FontByteBuf[Cursor] |= 1;
 					FontByteBuf[Cursor] |= (1 << ByteCount);
-				}
-				else
-				{
-					DP0("○");
 				}
 				ByteCount++;
 				if (ByteCount == 8)
@@ -329,13 +353,6 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(
 		{
 			Cursor++;
 		}
-
-		for (INT j = 0; j < XRight; j++)
-		{
-			DP0("○");
-		}
-		//
-		DP0("\r\n");
 	}
 
 	for (INT i = 0; i < YDown; i++)
@@ -344,11 +361,6 @@ VOID OutputFontGlyphFixSizeToByteArrayToFile(
 		{
 			FontByteBuf[Cursor++] = 0x00;
 		}
-		for (INT j = 0; j < TargetWidth; j++)
-		{
-			DP0("○");
-		}
-		DP0("\r\n");
 	}
 
 	//for (INT i = 0; i < TargetHeight; i++)
@@ -394,12 +406,14 @@ VOID Print00001(LPBYTE FontByteBuf, INT Width, INT Height)
 {
 	WCHAR Str[9] = { 0 };
 	INT LineCount = (INT)(ceil(Width / 8.0));
+	INT UpEmptyLineCount = 0, DownEmptyLineCount = 0;
 	for (INT i = 0; i < Height; i++)
 	{
+		INT Sum = 0;
 		for (INT j = 0; j < LineCount; j++)
 		{
-			
 			BYTE BT = FontByteBuf[i * LineCount + j];
+			Sum += BT;
 			//DP1("0x%02X ", FontByteBuf[i * LineCount + j]);
 			if(j < LineCount - 1)
 				DPByte(FontByteBuf[i * LineCount + j], Str,8);
@@ -407,8 +421,28 @@ VOID Print00001(LPBYTE FontByteBuf, INT Width, INT Height)
 				DPByte(FontByteBuf[i * LineCount + j], Str, Width % 8);
 			OutputDebugString(Str);
 		}
+
+		if (Sum == 0)
+		{
+			if (UpEmptyLineCount == i)
+			{
+				UpEmptyLineCount++;
+			}
+			else
+			{
+				DownEmptyLineCount++;
+			}
+		}
+		else
+			DownEmptyLineCount = 0;
+
+
 		DP0("\r\n");
 	}
+
+	DP4("g_CurrentChar = %c,UpEmptyLineCount = %d,DownEmptyLineCount = %d,H = %d ", g_CurrentChar, UpEmptyLineCount, DownEmptyLineCount,Height - UpEmptyLineCount - DownEmptyLineCount);
+
+
 }
 
 VOID FontByteArrayToFileSeparate2(LPBYTE FontByteBuf,DWORD dwNeedSize, INT Width, INT Height, FILE * distFp)
@@ -420,7 +454,7 @@ VOID FontByteArrayToFileSeparate2(LPBYTE FontByteBuf,DWORD dwNeedSize, INT Width
 	INT SourceLineMidIndex = (INT)(ceil(SourceLineCount / 2.0)) - 1;
 	INT Displacement = HalfLineBitCount % 8;
 	LPBYTE TwoHalfFontByteBuf = (LPBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,2 * HalfNeedSize);
-	/// 每 HalfLineBitCount 个 Bit 形成 HalfLineByteCount 个 Byte
+	// 每 HalfLineBitCount 个 Bit 形成 HalfLineByteCount 个 Byte
 	INT CursorL = 0, CursorR = 0;
 
 	for (INT i = 0; i < Width; i++)
@@ -486,9 +520,7 @@ VOID FontByteArrayToFileSeparate2(LPBYTE FontByteBuf,DWORD dwNeedSize, INT Width
 
 	Print00001(TwoHalfFontByteBuf + HalfNeedSize, Width / 2, Height);
 
-
 }
-
 
 VOID OutputFontGlyphFixSizeToByteArrayToFileSeparate2(
 	GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height, FILE * distFp)
@@ -564,10 +596,6 @@ VOID OutputFontGlyphFixSizeToByteArrayToFileSeparate2(
 			FontByteBuf[Cursor++] = 0x00;
 	FontByteArrayToFileSeparate2(FontByteBuf, dwNeedSize,Width,Height,distFp);
 
-	//OutputFontGlyphXY(TargetWidth,TargetHeight, FontByteBuf);
-	//OutputFontGlyphXY(gm.gmBlackBoxX, gm.gmBlackBoxY, lpBuf);
-//	size_t InSize = fwrite(FontByteBuf, sizeof(FontByteBuf[0]), dwNeedSize, distFp);
-//	DP1("fwrite Size = %d\n", InSize);
 	HeapFree(GetProcessHeap(), 0, FontByteBuf);
 }
 
