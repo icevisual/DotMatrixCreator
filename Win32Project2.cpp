@@ -28,6 +28,11 @@ void				GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * distFp);
 
 VOID OutputFontGlyphFixSizeToByteArrayToFileSeparate2(GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height, FILE * distFp);
 
+DWORD FormatFontGlyph2FixSize(
+	GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height,  LPBYTE &FontByteBuf);
+
+VOID FontByteArrayToFileSeparate2(LPBYTE FontByteBuf, DWORD dwNeedSize, INT Width, INT Height, FILE * distFp);
+
 VOID Print00001(LPBYTE FontByteBuf, INT Width, INT Height);
 
 #define MAX_LOG_MSG_LENGTH  100
@@ -222,40 +227,50 @@ void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * DistFfp)
 
 				// 	TCHAR * TextDemo = L"1234567890qypgweruoaszxcvnmitdfhklbj";
 				INT FType = GetFontTextType(TextDemo[i]);
-
+				LPBYTE FontByteBuf = 0;
+				size_t InSize;
 				switch (FType)
 				{
 				case -1:
-					OutputFontGlyphFixSizeToByteArrayToFileSeparate2(gm, lpBuf, 38, 38, DistFfp);
+					//OutputFontGlyphFixSizeToByteArrayToFileSeparate2(gm, lpBuf, 38, 38, DistFfp);
+					
+					FormatFontGlyph2FixSize(gm, lpBuf, 19, 38, FontByteBuf);
+					FontByteArrayToFileSeparate2(FontByteBuf, dwNeedSize, 38, 38, DistFfp);
+
+					HeapFree(GetProcessHeap(), 0, FontByteBuf);
 					break;
 				case 0:
-					OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
+				//	OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
+					FormatFontGlyph2FixSize(gm, lpBuf, 19, 38, FontByteBuf);
+					InSize = fwrite(FontByteBuf, sizeof(FontByteBuf[0]), dwNeedSize, DistFfp);
+					DP1("fwrite Size = %d\n", InSize);
+					HeapFree(GetProcessHeap(), 0, FontByteBuf);
 					break;
 				case 1:
+					//	OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
+					FormatFontGlyph2FixSize(gm, lpBuf, 19, 38, FontByteBuf);
+					InSize = fwrite(FontByteBuf, sizeof(FontByteBuf[0]), dwNeedSize, DistFfp);
+					DP1("fwrite Size = %d\n", InSize);
+					HeapFree(GetProcessHeap(), 0, FontByteBuf);
 					break;
 				case 2:
+					//	OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
+					FormatFontGlyph2FixSize(gm, lpBuf, 19, 38, FontByteBuf);
+					InSize = fwrite(FontByteBuf, sizeof(FontByteBuf[0]), dwNeedSize, DistFfp);
+					DP1("fwrite Size = %d\n", InSize);
+					HeapFree(GetProcessHeap(), 0, FontByteBuf);
 					break;
 				case 3:
+					//	OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
+					FormatFontGlyph2FixSize(gm, lpBuf, 19, 38, FontByteBuf);
+					InSize = fwrite(FontByteBuf, sizeof(FontByteBuf[0]), dwNeedSize, DistFfp);
+					DP1("fwrite Size = %d\n", InSize);
+					HeapFree(GetProcessHeap(), 0, FontByteBuf);
 					break;
 				default:
 					break;
 				}
 
-				if ((TextDemo[i] > 'a' && TextDemo[i] < 'z')
-					|| (TextDemo[i] > 'A' && TextDemo[i] < 'Z')
-					|| (TextDemo[i] > '0' && TextDemo[i] < '9')
-					)
-				{
-					OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
-				}
-				else if (TextDemo[i] < 128)
-				{
-					OutputFontGlyphFixSizeToByteArrayToFile(gm, lpBuf, 19, 38, DistFfp);
-				}
-				else
-				{
-					OutputFontGlyphFixSizeToByteArrayToFileSeparate2(gm, lpBuf, 38, 38, DistFfp);
-				}
 				//
 				HeapFree(GetProcessHeap(), 0, lpBuf);
 			}
@@ -268,6 +283,104 @@ void GetTitleFontGlyph(HWND m_hWnd, TCHAR * TextDemo, FILE * DistFfp)
 	ReleaseDC(m_hWnd, hDC);
 }
 
+
+DWORD FormatFontGlyph2FixSize(
+	GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height, LPBYTE &FontByteBuf)
+{
+	//计算图形每行占用的字节数。
+	INT nByteCount = ((gm.gmBlackBoxX + 31) >> 5) << 2;
+
+	INT TargetWidth = Width;
+	INT XLeft = floor((TargetWidth - gm.gmBlackBoxX) / 2.0);
+	INT XRight = TargetWidth - XLeft - gm.gmBlackBoxX;
+
+	INT TargetHeight = Height;
+	INT YUp = floor((TargetHeight - gm.gmBlackBoxY) / 2.0);
+	INT YDown = TargetHeight - YUp - gm.gmBlackBoxY;
+
+	DP6("gmX = %d,gmY = %d,XL = %d,XR = %d,YU = %d,YD = %d\n",
+		gm.gmBlackBoxX, gm.gmBlackBoxY,
+		XLeft, XRight, YUp, YDown);
+
+	DWORD dwNeedSize = TargetHeight * (DWORD)(ceil(TargetWidth / 8.0));
+	//BYTE FontBlock[TargetHeight ];
+	FontByteBuf = (LPBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeedSize);
+	// HeapFree(GetProcessHeap(), 0, FontByteBuf);
+	INT Cursor = 0;
+	for (INT i = 0; i < YUp; i++)
+	{
+		for (INT j = 0; j < (INT)(ceil(TargetWidth / 8.0)); j++)
+		{
+			FontByteBuf[Cursor++] = 0x00;
+		}
+	}
+
+	//显示每行图形的数据。
+	for (INT i = 0; i < gm.gmBlackBoxY; i++)
+	{
+		// 每行输出的点数，达到 gm.gmBlackBoxY 不再输出
+		INT PointCount = 0;
+
+		INT ByteCount = 0;
+		for (INT j = 0; j < XLeft; j++)
+		{
+			ByteCount++;
+			if (ByteCount == 8)
+			{
+				Cursor++;
+				ByteCount = 0;
+			}
+		}
+
+		for (INT j = 0; j < nByteCount; j++)
+		{
+
+			BYTE btCode = lpBuf[i* nByteCount + j];
+
+			//按字节输出每点的数据。
+			for (int k = 0; k < 8; k++)
+			{
+				if (PointCount == gm.gmBlackBoxX)
+					break;
+				if (btCode & (0x80 >> k))
+				{
+					//	FontByteBuf[Cursor] |= 1;
+					FontByteBuf[Cursor] |= (1 << ByteCount);
+				}
+				ByteCount++;
+				if (ByteCount == 8)
+				{
+					Cursor++;
+					ByteCount = 0;
+				}
+				else
+				{
+					//	FontByteBuf[Cursor] = FontByteBuf[Cursor] << 1;
+				}
+				PointCount++;
+			}
+
+		}
+		// 循环中已左移一次
+		//	FontByteBuf[Cursor++] <<= (8 - ByteCount - 1);
+		Cursor++;
+		for (INT j = 0; j < ceil((XRight - (8 - ByteCount)) / 8.0); j++)
+		{
+			Cursor++;
+		}
+	}
+
+	for (INT i = 0; i < YDown; i++)
+	{
+		for (INT j = 0; j < (INT)(ceil(TargetWidth / 8.0)); j++)
+		{
+			FontByteBuf[Cursor++] = 0x00;
+		}
+	}
+
+	Print00001(FontByteBuf, Width, Height);
+	return dwNeedSize;
+}
 
 VOID OutputFontGlyphFixSizeToByteArrayToFile(
 	GLYPHMETRICS gm, LPBYTE lpBuf, INT Width, INT Height, FILE * distFp)
