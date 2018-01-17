@@ -215,3 +215,29 @@ BOOLEAN GetSrtTimePeriod(CHAR * string, INT length, INT  * StartEnd) {
 	}
 	return FALSE;
 }
+
+
+
+BYTE ByteReverse(BYTE byte)
+{
+	BYTE Temp = byte;
+	BYTE TempArray[8] = { 0 };
+	for (int i = 0; i < 8; i++)
+	{
+		if (Temp % 2)
+		{
+			TempArray[i] = 1;// ¡ñ¡ð
+		}
+		else
+		{
+			TempArray[i] = 0;
+		}
+		Temp >>= 1;
+	}
+	Temp = 0;
+	for (int i = 0; i < 8; i++)
+	{
+		Temp = (Temp << 1) + TempArray[i];
+	}
+	return Temp;
+}

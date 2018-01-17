@@ -3,3 +3,4 @@
 
 DWORD char2Wchar(char * sBuf, int sBufSize, WCHAR * output);
 VOID ShowLastErrorMsg(LPTSTR lpszFunction, DWORD dw);
+BYTE ByteReverse(BYTE byte);
